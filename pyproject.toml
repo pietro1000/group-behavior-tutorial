@@ -1,0 +1,15 @@
+[project]
+name = "group-behavior-tutorial"
+version = "0.1.0"
+description = "Group behavior of AI — a minimal iterated prisoner's dilemma between an individual LLM agent and a group of LLM agents."
+# Pinned to the 3.12 series so `uv sync` builds the same environment on every laptop.
+requires-python = "==3.12.*"
+# Exact pins (no `>=`) so everyone in the room runs the same code.
+dependencies = [
+    # client.py — runs the model on any machine
+    "torch==2.15.0",
+    # client.py — downloads the model and its tokenizer from Hugging Face
+    "transformers==5.23.0",
+    # client_mlx.py — runs the model on Apple Silicon Macs (not installed elsewhere)
+    "mlx-lm==0.32.2 ; platform_machine == 'arm64' and sys_platform == 'darwin'",
+]

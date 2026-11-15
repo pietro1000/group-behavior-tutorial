@@ -1,0 +1,12 @@
+# The uv environment — rebuilt by `uv sync`, never committed
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Local editor config — machine-specific
+/.vscode/
+
+# OS cruft
+.DS_Store

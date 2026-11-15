@@ -23,7 +23,7 @@ REPLY_START = "Answer:"
 class Client:
     """Turns a conversation plus a new prompt into the model's reply."""
 
-    def __init__(self, *, model_name: str = MODEL_NAME, temperature: float = 0.6, max_new_tokens: int = 150):
+    def __init__(self, *, model_name: str = MODEL_NAME, temperature: float = 0.8, max_new_tokens: int = 150):
         self.temperature = temperature
         self.max_new_tokens = max_new_tokens
         # Use the GPU if this machine has one (Apple or NVIDIA), otherwise the CPU.

@@ -113,7 +113,7 @@ Every round also leaves two text files per player in `logs/<date>_<time>/round_<
 ```
 round_3/
 ├── Alice_prompt.txt    # what Alice read: the conversation so far, then the round's prompt
-├── Alice_answer.txt    # what Alice produced: her tool call, the tool's result, her answer
+├── Alice_answer.txt    # Alice's two model calls (exact prompt and reply) and the tool's result
 ├── Bob_prompt.txt      # the one prompt the game sent to the group
 └── Bob_answer.txt      # every member's reply in both discussion rounds, then the vote
 ```
@@ -123,12 +123,13 @@ which takes minutes per reply on a laptop. To keep the tutorial fast, the client
 reasoning and makes the model state its answer first, then explain it. The model is tiny, so
 expect its explanations to be shaky: the point here is the *mechanics* of agents and groups.
 
-**A note on the tool call.** The model never runs anything: its reply names a function, Python
-runs it, and the result comes back in the next prompt. To get that reply from a model this small,
-the client writes `TOOL:` as the first word and the model continues the line. The model does not
-stop there: it goes on to answer before any tool has run, and sometimes invents a result, so the
-agent keeps only the first line and the number the model reads next is the one Python computed.
-Judgement about when to use a tool needs a larger model, or an API with tool calling built in.
+**A note on the tool call.** The model never runs anything. The agent first asks it whether it
+wants the tool, and it replies with a call such as `TOOL: count_moves(DEFECT)` or with
+`TOOL: none`. Python runs the call and the result comes back above the next prompt; after
+`TOOL: none` the model gets the game's prompt alone. To get that reply from a model this small,
+the client writes `TOOL:` as the first word and the model continues the line. Expect it to ask
+for the tool nearly every time, and for the same count: judgement about when a tool helps needs
+a larger model, or an API with tool calling built in.
 
 ## Things to try
 

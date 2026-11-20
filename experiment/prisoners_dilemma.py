@@ -3,6 +3,7 @@ The experiment — an iterated prisoner's dilemma between two agents.
 
 Each round both players choose COOPERATE or DEFECT without seeing the other's choice.
 The game keeps one conversation per player and adds the result of every round to it.
+It also writes what each player read and produced in every round to logs/ (utils/log.py).
 """
 
 from typing import Dict, List
@@ -10,6 +11,7 @@ from typing import Dict, List
 from core.agent import Agent
 from core.conversation import Conversation
 from core.parser import parse_answer
+from utils.log import log_answer, log_prompt
 
 ACTIONS = ["COOPERATE", "DEFECT"]
 
@@ -17,7 +19,7 @@ ACTIONS = ["COOPERATE", "DEFECT"]
 PAYOFFS = {
     ("COOPERATE", "COOPERATE"): 3,
     ("COOPERATE", "DEFECT"): 0,
-    ("DEFECT", "COOPERATE"): 5,
+    ("DEFECT", "COOPERATE"): 4,
     ("DEFECT", "DEFECT"): 1,
 }
 
@@ -26,7 +28,7 @@ INSTRUCTIONS = """You are a player in a game with one other player. The game las
 In each round, you and the other player each choose COOPERATE or DEFECT, without seeing the other's choice.
 - If both choose COOPERATE, each earns 3 points.
 - If both choose DEFECT, each earns 1 point.
-- If one chooses DEFECT and the other chooses COOPERATE, the one who chose DEFECT earns 5 points and the other earns 0 points.
+- If one chooses DEFECT and the other chooses COOPERATE, the one who chose DEFECT earns 4 points and the other earns 0 points.
 Your goal is to earn as many points as possible over the {n_rounds} rounds."""
 
 QUESTION = """Round {round_number}: do you choose COOPERATE or DEFECT?
@@ -60,7 +62,9 @@ class PrisonersDilemma:
             actions = []
             for player in self.players:
                 conversation = self.conversations[player.name]
-                reply = player.run(conversation=conversation, prompt=question, options=ACTIONS)
+                log_prompt(round_number=round_number, name=player.name, conversation=conversation, prompt=question)
+                reply, transcript = player.run(conversation=conversation, prompt=question, options=ACTIONS)
+                log_answer(round_number=round_number, name=player.name, answer=transcript)
                 print(f"\n[{player.name}] {reply}")
                 conversation.add(role="user", content=question)
                 conversation.add(role="assistant", content=reply)

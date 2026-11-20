@@ -7,12 +7,12 @@ The group's answer is the majority vote of the last round.
 """
 
 from collections import Counter
-from typing import List
+from typing import List, Tuple
 
+from agents.individual import IndividualAgent
 from core.agent import Agent
 from core.conversation import Conversation
 from core.parser import parse_answer
-from individual import IndividualAgent
 
 FOLLOWUP = (
     "{prompt}\n\n"
@@ -31,7 +31,9 @@ class ReconcileAgent(Agent):
         self.members = [IndividualAgent(name=f"{name}_{i + 1}", client=client) for i in range(n_members)]
         self.n_rounds = n_rounds
 
-    def run(self, *, conversation: Conversation, prompt: str, options: List[str]) -> str:
+    def run(self, *, conversation: Conversation, prompt: str, options: List[str]) -> Tuple[str, str]:
+        """Discuss for n_rounds, then vote. The reply is the vote, the transcript the discussion."""
+        transcript = []  # every member's reply in every discussion round, then the vote
         replies = {}
         for discussion_round in range(1, self.n_rounds + 1):
             new_replies = {}
@@ -39,12 +41,17 @@ class ReconcileAgent(Agent):
                 # A member reads the others' previous replies, never its own.
                 others = "\n".join(f"- {name}: {reply}" for name, reply in replies.items() if name != member.name)
                 member_prompt = FOLLOWUP.format(prompt=prompt, others=others) if replies else prompt
-                reply = member.run(conversation=conversation, prompt=member_prompt, options=options)
-                print(f"\n[{member.name}, discussion round {discussion_round}] {reply}")
+                # A member is an individual, so its transcript is its reply: we keep the reply.
+                reply, _ = member.run(conversation=conversation, prompt=member_prompt, options=options)
+                entry = f"[{member.name}, discussion round {discussion_round}] {reply}"
+                print(f"\n{entry}")
+                transcript.append(entry)
                 new_replies[member.name] = reply
             replies = new_replies
 
         # The group needs the options to count the votes.
         votes = Counter(parse_answer(reply, options) for reply in replies.values())
+        answer = f"Answer: {votes.most_common(1)[0][0]}"
         print(f"\n[{self.name}] votes: {dict(votes)}")
-        return f"Answer: {votes.most_common(1)[0][0]}"
+        transcript.append(f"[{self.name}] votes: {dict(votes)}\n{answer}")
+        return answer, "\n\n".join(transcript)

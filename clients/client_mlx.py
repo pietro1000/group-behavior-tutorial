@@ -25,15 +25,28 @@ class Client:
         self.max_new_tokens = max_new_tokens
         self.model, self.tokenizer = load(model_name)
 
-    def generate(self, *, conversation: Conversation, prompt: str) -> str:
-        """Send the conversation so far plus `prompt` as a new user message; return the reply."""
+    def generate(self, *, conversation: Conversation, prompt: str, reply_start: str = REPLY_START) -> str:
+        """Send the conversation so far plus `prompt` as a new user message; return the reply.
+
+        reply_start is the beginning of the reply, and we write it instead of the model. The model
+        reads it as its own words and continues from there, so every reply starts with reply_start.
+        The text the model reads ends like this:
+
+            ...the prompt... </think>
+
+            Answer:
+
+        - "Answer:" (the default): the model continues with its choice, e.g. " DEFECT".
+        - "TOOL:" (passed by agents/tool_use.py): the model continues with a tool call,
+          e.g. " count_moves(DEFECT)".
+        """
         messages = conversation.messages + [{"role": "user", "content": prompt}]
         text = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=False)
         reply = generate(
             self.model,
             self.tokenizer,
-            prompt=text + SKIP_REASONING + REPLY_START,
+            prompt=text + SKIP_REASONING + reply_start,
             sampler=self.sampler,
             max_tokens=self.max_new_tokens,
         )
-        return f"{REPLY_START} {reply.strip()}"
+        return f"{reply_start} {reply.strip()}"
